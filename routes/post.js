@@ -12,64 +12,38 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Getting One
-router.get('/:id', getSubscriber, (req, res) => {
-    res.json(res.subscriber)
-});
+// Creating new post
+router.post("/create", async (req, res)=>{
+    try{
+        const {titre, content} = req.body;
+        const post = new Post({titre,content});
+        await post.save();
+        res.status(201).send("post created successfuly");
+    }catch(error){
+        res.status(400).send(error.message);
+    }
+})
 
-// Creating one
-router.post('/', async (req, res) => {
-    const subscriber = new Subscriber({
-        name: req.body.name,
-        subscribedToChannel: req.body.subscribedToChannel
-    });
-    try {
-        const newSubscriber = await subscriber.save();
-        res.status(201).json(newSubscriber)
-    } catch (err) {
-        res.status(400).json({message: err.message})
+//Update post 
+router.put("/:id", async (req, res)=>{
+    try{
+        const {id} = req.params;
+        const {titre, content} = req.body;
+        const updatePost = await Post.findByIdAndUpdate(id,{titre,content},{new:true});
+        res.send(updatePost);
+    }catch(error){
+        res.status(400).send(error.message);
     }
-});
+})
 
-// Updating One
-router.patch('/:id', getSubscriber, async (req, res) => {
-    if (req.body.name != null) {
-        res.subscriber.name = req.body.name
+//Delete post
+router.delete("/:id", async (req,res)=>{
+    try{
+        const deletedPost = await Post.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: "Post deleted", deletedPost});
+    }catch(error){
+        res.status(400).send(error.message);
     }
-    if (req.body.subscribedToChannel != null) {
-        res.subscriber.subscribedToChannel = req.body.subscribedToChannel
-    }
-    try {
-        const updatedSubscriber = await res.subscriber.save();
-        res.json(updatedSubscriber)
-    } catch (err) {
-        res.status(400).json({message: err.message})
-    }
-});
-
-// Deleting One
-router.delete('/:id', getSubscriber, async (req, res) => {
-    try {
-        await res.subscriber.remove();
-        res.json({message: 'Deleted Subscriber'})
-    } catch (err) {
-        res.status(500).json({message: err.message})
-    }
-});
-
-async function getSubscriber(req, res, next) {
-    let subscriber;
-    try {
-        subscriber = await Subscriber.findById(req.params.id);
-        if (subscriber == null) {
-            return res.status(404).json({message: 'Cannot find subscriber'})
-        }
-    } catch (err) {
-        return res.status(500).json({message: err.message})
-    }
-
-    res.subscriber = subscriber;
-    next()
-}
+})
 
 module.exports = router;

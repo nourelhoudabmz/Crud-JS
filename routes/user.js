@@ -13,6 +13,7 @@ router.post('/register', (req, res) => {
     password: req.body.password,
     created: today
   }
+  
 
 })
 
